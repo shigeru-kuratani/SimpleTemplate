@@ -1,0 +1,1166 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<title>SimpleTemplate Document</title>
+<meta name="author" content="Shigeru Kuratani<kuratani@benefiss.com>" />
+<script type="text/javascript">
+//<![CDATA[
+if(window.innerWidth) {
+	window.addEventListener('load',positionFix,false);
+	window.addEventListener('resize',positionFix,false);
+}else{
+	window.attachEvent('onload',positionFix);
+	window.attachEvent('onresize',positionFix);
+}
+function positionFix() {
+	getWindowInfo();
+	nodeNavi = document.getElementById('navi');
+	offX = 770 + ((windowWidth - 800) / 2);
+	nodeNavi.style.top = 60 + 'px';
+	nodeNavi.style.left = offX + 'px';
+}
+function getWindowInfo() {
+	if(window.innerWidth) {
+		windowWidth = window.innerWidth;
+		windowHeight = window.innerHeight;
+	}else{
+		windowWidth = document.body.clientWidth;
+		windowHeight = document.body.clientHeight;
+	}
+}
+//]]>
+</script>
+<style type="text/css">
+* {
+	font-family: Meiryo,"Hiragino Kaku Gothic Pro","MS PGothic",Osaka,sans-serif;
+}
+div#wrapper {
+	width: 800px;
+	margin: 0 auto;
+}
+h2 {
+	padding: 5px;
+	border-top: 1px solid #999;
+	border-bottom: 1px solid #999;
+	border-left: 7px solid #999;
+	border-right: 1px solid #999;
+	background-color: #e6e6e6;
+	font-size: 125%;
+}
+h3 {
+	padding: 3px;
+	border-left: 3px solid #999;
+	border-bottom: 1px solid #999;
+	font-size: 110%;
+}
+h4 {
+	padding-left: 3px;
+	border-left: 3px solid #999;
+	font-size: 100%;
+}
+pre {
+	padding: 10px;
+	border: 1px solid #ccc;
+	background-color: #eee;
+}
+div#navi {
+	position: fixed;
+}
+div#navi ul {
+	list-style-type: none;
+}
+div#navi ul li {
+	width: 125px;
+}
+div#navi ul li a {
+	margin: 0px;
+	padding: 7px;
+	display: block;
+	border: 1px solid #666;
+	text-align: center;
+}
+div#navi ul li a:link,
+div#navi ul li a:visited {
+	color: #000;
+	text-decoration: none;
+	background-color: #e6e6e6;
+}
+div#navi ul li a:hover,
+div#navi ul li a:active {
+	color: #fff;
+	text-decoration: none;
+	background-color: #999;
+}
+</style>
+</head>
+<body>
+<div id="navi">
+	<ul>
+		<li><a href="#top">GO TO TOP</a></li>
+		<li><a href="http://st.benefiss.com/">GO TO HOME</a></li>
+	</ul>
+</div>
+<div id="wrapper">
+<h1><a name="top">SimpleTemplate Document</a></h1>
+<hr />
+<!-- はじめに -->
+<h2>はじめに～クラスの概要～</h2>
+<p>
+	テンプレートエンジンSimpleTemplateを作成しようと考えたのは、Smartyを使用する程でもない小規模のサイトで、ロジックとデザインの分離を図りたい為でした。<br>
+	その時構築作業をしていたWEBシステムにおいて、HTML構文で記述したテンプレートファイルを読み込んで、特定の文字列の置換をする実装をしていたのが始まりです。しかし、置換する変数が多数になるとロジックファイルの記述が煩雑になり、また、一覧ページを作成するための配列ループなどの処理がHTMLと混在し、ロジック管理が困難になりました。<br>
+	そこで小規模システム構築時に使用する独自のテンプレートエンジン開発を開始しました。そして生まれたのがSimpleTemplateです。
+</p>
+<p>
+	SimpleTemplateは小規模なWEBシステムでの使用を前提として、テンプレート変数を展開する機能を中核にミニマムな機能を提供いたします。<br>
+	PHPで記述されたテンプレートエンジンとしてはSmarty（<a href="http://www.smarty.net/" target="_blank">http://www.smarty.net/</a>）が有名ですが、そのアーキテクチャや実装機能は非常に優れており、また機能も豊富です。<br>
+	しかし、「ちょっとしたシステム」例えばメールフォームなどをWEBサイトに実装する場合など、「Smartyを使用する程でもないんだけど・・・」という時は、SimpleTemplateは非常に良い道具となると考えます。<br>
+	下記の「ライセンスに関して」で述べますが、SimpleTemplateはBSDライセンスにて配布致しますので、機能拡張などの改変をして社内テンプレートエンジンとして公開を強制されることなく使用することが出来ます。また、クラス自体がシンプルに記述されているので改変もしやすいかと思います。<br>
+	そして、構文もSmartyを活用されている方が無駄な労力を強要されないように、Smartyの構文を模しております。
+</p>
+<p>
+	SimpleTemplateの動作環境ですが、PHP5.x.xでの使用を前提としております。<br>
+	クラスファイルの記述がPHP5.x.xで採用された構文に沿って記述されているためです。PHP4.x.xでの動作検証は行っておりませんので、ご了承ください。
+</p>
+<!-- /はじめに -->
+<!-- ライセンスに関して -->
+<h2>ライセンスに関して</h2>
+<p>
+	配布に際しては皆様がWEBシステムにSimpleTemplateを組み込んだ場合でも、ソースコードの開示を必要としないように、またSimpleTemplateのソースコードを改変・改良して再配布することが出来るようにBSDライセンスに従って配布致します。<br>
+	ただし、BSDライセンスによる配布ですので、再配布・使用の際には下記の条件に従う必要があります。
+</p>
+<ul>
+	<li>ソースコードを再頒布する場合、著作権表示、本条件一覧、および免責条項を含めること。</li>
+	<li>バイナリ形式で再頒布する場合、頒布物に付属のドキュメント等の資料に、上記の著作権表示、本条件一覧、および下記免責条項を含めること。</li>
+	<li>書面による特別の許可なしに、本ソフトウェアから派生した製品の宣伝または販売促進に、著作権者の名前またはコントリビューターの名前を使用してはならない。</li>
+</ul>
+<p>
+	基本的に、クラスファイルの最初に記述されている著作権等の記載部分をそのままにして使用・配布していただければ上記条件を満たすといえます。<br>
+	また、改変後の再配布に際して、ユーザの再配布の自由を強制されることもありません。
+</p>
+<!-- /ライセンスに関して -->
+<!-- クイックスタート -->
+<h2>クイックスタート</h2>
+<p>
+	まず、SimpleTemplateを使用するための簡単な例を下記に示します。
+</p>
+<pre>
+【ディレクトリ】
+/┳index.php
+ ┣SimpleTemplate.class.php
+ ┣templates
+　　　┣some.tpl
+ ┣cache
+</pre>
+<pre>
+【PHPファイル】index.php
+&lt;?php
+// SimpleTemplateのインクルード
+require_once　'SimpleTemplate.class.php';
+
+// テンプレートオブジェクトの作成
+$template = new SimpleTemplate();
+// テンプレートファイル格納ディレクトリの指定
+$template->template_dir('./templates');
+// テンプレートファイル記述エンコーディングの指定
+$template->setTplEncoding('UTF-8');
+// 出力エンコーディングの指定
+$template->setOutputEncoding('UTF-8');
+
+// 変数の設定
+$someVariable = '初めてのSimpleTemplate!';
+
+// テンプレート変数の割り当て（アサイン）
+$template-&gt;assign('someValue', $someVariable);
+
+// テンプレートファイルの表示（ディスプレイ）
+$template-&gt;display('some.tpl');
+?&gt;
+</pre>
+<pre>
+【テンプレートファイル】some.tpl
+&lt;!DOCTYPE html&gt;
+&lt;html lang="ja"&gt;
+&lt;head&gt;
+&lt;meta charset="utf-8" /&gt;
+&lt;title&gt;SimpleTemplateクイックスタート&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  {$someValue}
+&lt;/body&gt;
+&lt;/html&gt;
+</pre>
+<pre>
+【出力】
+初めてのSimpleTemplate!
+</pre>
+<p>
+	PHPファイルでの記述の概要を説明すると以下のようになります。<br>
+	まず、①SimpleTemplateクラスを利用するためにSimpleTemplate.class.phpをインクルードします。<br>
+	②SimpleTemplateクラスのインスタンスを作成して、クラスメソッドを利用する準備をします。<br>
+	③template_dirメソッドにてテンプレート格納ディレクトリを指定します。<br>
+	※絶対パス・相対パスによる指定が可能です。<br>
+	④setTplEncodingメソッドにてテンプレートの記述エンコーディングを指定します。<br>
+	※テンプレートファイルのエンコーディング以外のエンコーディングを指定すると文字化けの原因となります。<br>
+	⑤setOutputEncodingメソッドにて出力エンコーディングを指定します。<br>
+	
+	⑥PHPコード内で使用する変数を設定します。<br>
+	⑦テンプレート変数を割り当てます。<br>
+	この時、「$template-&gt;assign('someValue', $someVariable);」とした場合、テンプレートファイルでは「someValue」の頭に$（ドルマーク）を付けて、波カッコで囲みます（{$someValue}）。<br>
+	⑧最後に「display」メソッドにて表示したいテンプレートファイルをディスプレイします。
+</p>
+<p>
+	テンプレートファイルでは、展開したいテンプレート変数を記述します。<br>
+	そして、「template_dir」メソッドにて指定したテンプレート格納ディレクトリに格納しておきます。<br>
+	上記の例のように、PHPファイルで割り当てたテンプレート変数識別子（例：someValue）の頭に$（ドルマーク）を付けて、波カッコで囲みます（{$someValue}）。<br>
+	そうすると、PHPファイルで割り当てた変数値が展開されて、「display」メソッドにてテンプレートファイルを表示した際に、テンプレート変数がPHPファイルで割り当てた変数値に置き換わります。
+</p>
+<p>
+	以上がSimpleTemplateの基本的な使用法となります。<br>
+	PHP自体がHTMLファイルの中に埋め込むことが出来る言語であることから、ちょっとしたシステム（アプリケーション）であればHTMLファイルにPHPコードを記述することで短期間にシステムを構築するこが出来ます。<br>
+	しかし、一定規模以上のコードを有するシステムとなると、HTMLの中にPHPコードを記述するとその保守は困難を極めます。そこで、システムロジックとデザイン（表示）を分離し、ロジックはロジックとして管理・保守し、デザイン（表示）はそれとは別に管理することで、システムの保守性を向上させ、また構築を容易にすることが出来ます。<br>
+	SimpleTemplateはPHPコードでの変数をテンプレートファイルで展開・表示する機能を中心に、それに付随する機能を実装したテンプレートエンジンです。機能的には非常にシンプルですので、中～小規模のシステム構築で使用して頂けると、ちょうど良い組み合わせとなるでしょう。
+</p>
+<!-- /クイックスタート -->
+<!-- キャッシュ機構 -->
+<h2>キャッシュ機構</h2>
+<p>
+	SimpleTemplateは、キャッシュ機構を採用しております。<br>
+	SimpleTemplateでは、テンプレートファイルに記述されている構文を処理し、ブラウザへ出力をしますが、ブラウザからのリクエストがある度にパースをすると、テンプレートファイルの文字数が多い場合や、記述構文が多い場合には、パフォーマンス低下の原因となります。<br>
+	そこで、ver.1.1.0にて、キャッシュ機構を実装致しました。<br>
+	<br>
+	以下に示しすように、①cache_dirメソッドにてキャッシュディレクトリを指定し、②useCacheSystemメソッドにて使用するに設定すると、指定キャッシュディレクトリにキャッシュファイルを生成致します。<br>
+	キャッシュファイルは、①アサイン変数の値と、②全構文処理を施したHTMLファイルを合わせたテキストファイルです。<br>
+	キャッシュファイルの生成後に、指定したテンプレートファイルのいずれかを更新していない場合には、キャッシュファイルがそのままブラウザへレスポンスされます。いずれかのテンプレートファイルを更新した場合には、全てのテンプレートファイルをパースし直してキャッシュファイルを生成した上で、構文処理済みのHTMLをブラウザに返します。<br>
+	また、テンプレートファイルに更新がない場合でも、アサイン変数の値に変更がある場合には、全構文処理を施した上で、構文処理済みのHTMLをブラウザに返します。<br>
+	<br>
+	上記のようなキャッシュの仕組み上、初回のリクエストの場合には、キャッシュファイル生成のオーバーヘッドが発生致します。<br>
+	また、アサインする変数がリクエスト毎に変更するアプリケーションの場合で、キャッシュ機構を有効にすると、リクエスト毎にキャッシュファイルの生成オーバーヘッドが発生しますので、さらにレスポンスは低下します。<br>
+	ですので、アサインする変数があまり変更されないアプリケーションでキャッシュ機構を使用するとパフォーマンスの向上が図れると言えます。<br>
+	<br>
+	なお、キャッシュファイルが存在すれば、テンプレートファイルが存在しない場合でも、キャッシュファイルをブラウザに返す仕様となっております。<br>
+	また、useCacheSystemメソッドのパラメータは、①論理値、②数値型、③文字列型を使用することが出来ます。パラメータ値の評価（true,false）はPHPの言語文法に従います。例えば、0以外の数値であれば「true」と評価されますし、空文字（''）の文字列は「false」として評価されます。※詳しくは公式ドキュメントをご参照ください。<a href="http://www.php.net/manual/ja/language.types.boolean.php" target="blank">&gt;&gt;PHPドキュメント</a>
+</p>
+<pre>
+【PHPファイル】
+&lt;?php
+// SimpleTemplateのインクルード
+require_once　'SimpleTemplate.class.php';
+
+// テンプレートオブジェクトの作成
+$template = new SimpleTemplate();
+// テンプレートファイル格納ディレクトリの指定
+$template->template_dir('./templates');
+// キャッシュファイル格納ディレクトリの指定
+$template->cache_dir('./cache');
+// キャッシュ機構を使用するかの設定
+$template->useCacheSystem(true);
+// テンプレートファイル記述エンコーディングの指定
+$template->setTplEncoding('UTF-8');
+// 出力エンコーディングの指定
+$template->setOutputEncoding('UTF-8');
+
+// 変数の設定
+$someVariable = '初めてのSimpleTemplate!';
+
+// テンプレート変数の割り当て（アサイン）
+$template-&gt;assign('someValue', $someVariable);
+
+// テンプレートファイルの表示（ディスプレイ）
+$template-&gt;display('some.tpl');
+?&gt;
+</pre>
+<!-- /キャッシュ機構 -->
+<!-- リファレンス -->
+<h2>リファレンス</h2>
+<p>
+	SimpleTemplateではいくつかの機能・構文が用意されています。<br>
+	以下にご説明いたしますので、お読みいただきSimpleTemplateをご活用ください。
+</p>
+<!-- コメント -->
+<h3>コメント</h3>
+<p>
+	最初にコメントの説明があるのは不思議に思われるかもしれませんが、まずテンプレートファイル内でのコメントの記述方法をご説明いたします。<br>
+	テンプレートエンジンを使用したWEBシステム開発ではデザインファイルとしてHTMLの構文に沿った記述をテンプレートとして使用します。通常の静的なWEBページでそうであるように、HTML構文に沿ったデザインファイルも文書構造の記述後の理解を助けるためにコメントを残す必要があります。これはテンプレートファイルの保守のために有用です。<br>
+	構文としては、テンプレートファイルにて以下のようにコメントとして残したい文字列を「{*」と「*}」で囲みます。
+</p>
+<pre>
+【記述例】
+{* この部分はコメントとなり、テンプレートの出力にはあらわれません。 *}
+</pre>
+<p>
+	テンプレートファイルのコメントで注意すべきことは、テンプレートファイルの出力時には空文字に変換され、全く出力には現れないことです。<br>
+	これは、HTMLファイルのコメントと異なります。
+</p>
+<!-- /コメント -->
+<!-- テンプレート変数の展開 -->
+<h3>テンプレート変数の展開</h3>
+<p>
+	SimpleTemplateの中核的機能であるテンプレートファイル内での変数の展開についてご説明いたします。<br>
+	クイックスタートでもご説明した通り、SimpleTemplateを使用してテンプレートファイル内で変数を展開するにはいくつかのステップが必要です。<br>
+	本節ではテンプレート変数のテンプレートファイル内での構文を中心にご説明いたしますので、使用ステップが分からない場合は今一度「クイックスタート」をご覧ください。
+</p>
+<p>
+	まず、PHPファイルにて変数のテンプレート変数への割り当て（アサイン）を行います。
+	通常は変数に値を設定し、その変数をテンプレート変数へアサインします。
+</p>
+<pre>
+【記述例】PHPファイル内
+// 変数の設定
+$someVariable = 'テンプレート変数の値';
+// テンプレート変数の割り当て（アサイン）
+$template-&gt;assign('someValue', $someVariable);
+
+※$templateはSimpleTemplateクラスのインスタンスです
+</pre>
+<p>
+	次に、表示するテンプレートファイルにて、展開するテンプレート変数を記述します。<br>
+	上記のPHPファイルの記述例に従うと、テンプレート変数はアサインしたテンプレート変数識別子（例では”someValue”）の頭に$（ドルマーク）を付加して、波カッコで囲みます。<br>
+	記述例としては以下のようになります。
+</p>
+<pre>
+【記述例】テンプレートファイル内
+{$someValue}
+</pre>
+<p>
+	そして、出力は以下のようになります。
+</p>
+<pre>
+【出力】
+テンプレート変数の値
+</pre>
+<p>
+	テンプレート変数の割り当て（アサイン）で注意すべきことは、アサインするデータ型に制限があることです。<br>
+	オブジェクト型・リソース型の値をテンプレート変数にはアサインできません。これらをアサインした場合はテンプレートファイル内のテンプレート変数は空文字に変換されます。<br>
+	テンプレート変数にアサインすることが出来るデータ型は、①論理値、②数値（整数・浮動小数点数）、③文字列、④配列となります。<br>
+	ただし、④配列をアサインした場合は、後述の「foreach」・「section」構文内にてテンプレート変数を使用しないと空文字に変換されます。
+</p>
+<p>
+	また、テンプレート変数識別子は文字列（string）のみ使用することが出来ます。その他のデータ型、例えば数値を使用した場合には、assignメソッドはfalseを返し、テンプレート変数の割り当ては行われません。（※assignメソッドにてテンプレート変数の割り当てが成功した場合には、assignメソッドは戻り値としてtrueを返します。）
+</p>
+<!-- /テンプレート変数の展開 -->
+<!-- アサインされていないテンプレート変数の処理 -->
+<h3>変数の割り当て（アサイン）がされていないテンプレート変数の処理</h3>
+<p>
+	PHPファイルにて変数の割り当て（アサイン）がされていないテンプレート変数がテンプレートファイルに記述されている場合、原則としてテンプレート変数は空文字へ変換されます。<br>
+	空文字へと変換されるテンプレート変数の表記を正規表現になおすと以下のようになります。
+</p>
+<pre>
+/{\$([\w.-_?&=]+)}/
+</pre>
+<p>
+	しかし、デフォルト値を設定したテンプレート変数は変数を割り当てられていない場合だけ、設定したデフォルト値にテンプレート変数が変換されます。<br>
+	デフォルト値の設定構文は以下のようになります。
+</p>
+<pre>
+【デフォルト値設定構文】
+＜文字列の場合＞
+{$someValue|default:['|"]defaultValue['|"]}
+＜数値の場合＞
+{$someValue|default:defaultValue}
+【記述例】
+{$someValue|default='デフォルト値'}
+</pre>
+<!-- /アサインされていないテンプレート変数の処理 -->
+<!-- テンプレートファイルのインクルード -->
+<h3>テンプレートファイルのインクルード</h3>
+<p>
+	SimpleTemplateではテンプレートファイル内にて別のテンプレートファイルをインクルードすることが出来ます。<br>
+	これはWEBページのヘッダーやフッターをテンプレートファイルとして、表示する各テンプレートファイルにてインクルードすると便利です。保守性が向上します。<br>
+	構文は以下のようになります。
+</p>
+<pre>
+【テンプレートファイルのインクルード構文】
+{include file=['|"]otherTemplate['|"]}
+【記述例】
+{include file='header.tpl'}
+</pre>
+</p>
+	テンプレートファイル内で他のテンプレートファイルをインクルードすると、インクルード構文の記述がインクルードしたファイル文字列に置き換わります。<br>
+	存在しないテンプレートファイルをインクルードしようとするとPHPの警告（Warning）が表示されますので、テンプレートファイル名等が間違っていないかを確認してください。<br>
+	また、インクルードするテンプレートファイルはテンプレート格納ディレクトリに置く必要があります。※テンプレート格納ディレクトリにテンプレートファイルが存在しない場合も警告が表示されます。<br>
+	インクルードしたテンプレートファイル内にて別のテンプレートファイルを再度インクルードすることも可能です。テンプレートファイルのインクルード処理はテンプレートファイル内にインクルード構文が存在しなくなるまで再帰的に処理されます。これにより、テンプレートファイルをWEBページの各ブロックに割り当ててモジュール化することが出来ます。
+</p>
+<!-- /テンプレートファイルのインクルード -->
+<!-- テンプレートファイル内での変数の設定(assign) -->
+<h3>テンプレートファイル内での変数の設定(assign)</h3>
+<p>
+	SimpleTemplateではテンプレートファイル内でテンプレート変数を設定することが出来ます。これはPHPファイル側のロジックで管理するのではなく、テンプレートファイル内で管理するのが適当な値、つまり各WEBページ固有の値をテンプレートへ割り当てるのに有用です。<br>
+	assign構文は以下のようになります。
+</p>
+<pre>
+【assign構文】
+{assign var=['|"]templateVariable['|"] value=templateValue}
+【記述例】
+{assign var='page_title' value='SimpleTemplateテストページ'}
+</pre>
+<p>
+	以下がテンプレートファイル内でHTMLページのページタイトルを設定する例です。例に示すように、各テンプレートにて共通のHTMLヘッダを記述したテンプレートをインクルードし、そのヘッダテンプレートにてページタイトルをテンプレート変数で記述しておきディスプレイするテンプレートにてページタイトルに使用しているテンプレート変数を設定すると便利です。
+</p>
+<pre>
+【header.tpl】
+&lt;!DOCTYPE html&gt;
+&lt;html lang="ja"&gt;
+&lt;head&gt;
+&lt;meta charset="utf-8" /&gt;
+&lt;title&gt;{$page_title}&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+</pre>
+<pre>
+【表示テンプレート】
+{* ヘッダーテンプレートのインクルード *}
+{include file='header.tpl'}
+
+{* ページのタイトルの設定 *}
+{assign var='page_title' value='ページタイトル'}
+
+～template contents～
+
+{* フッターテンプレートのインクルード *}
+{include file='footer.tpl'}
+</pre>
+<pre>
+【footer.tpl】
+&lt;/body&gt;
+&lt;/html&gt;
+</pre>
+<p>
+	assign構文を使用するに当たって注意すべきことは、valueの値として複数行の文字列を設定出来ないことです。<br>
+	複数行の文字列をテンプレート内でテンプレート変数に設定するには、次に説明するcapture構文を使用します。
+</p>
+<!-- /テンプレートファイル内での変数の設定(assign) -->
+<!-- テンプレートファイル内での変数の設定(capture) -->
+<h3>テンプレートファイル内での変数の設定(capture)</h3>
+<p>
+	SimpleTemplateにおいて、テンプレートファイル内にてテンプレート変数を設定するもうひとつの方法がcapture構文です。<br>
+	この構文はassign構文と異なり複数行の文字列（値）をテンプレート変数に設定することが出来ます。<br>
+	capture構文は以下のようになります。
+</p>
+<pre>
+【capture構文】
+{capture name=['|"]templateVariable['|"]}
+～テンプレート変数（複数行）～
+{/capture}
+【記述例】
+{capture name='templateVariable'}
+&lt;script type="text/javascript"&gt;
+//&lt;![CDATA[
+function alertMsg(){
+  alert('テンプレート側でスクリプトが実装されました');
+}
+//]]&gt;
+&lt;/script>
+{/capture}
+</pre>
+<p>
+	capture構文は表示するHTMLページ固有のJavaScriptをテンプレートファイル内で設定する場合に便利です。<br>
+	共通してインクルードするテンプレート（例：ヘッダーテンプレートファイル）にテンプレート変数を記述しておき、ディスプレイするテンプレート内でそのテンプレート変数を設定する使用例です。
+</p>
+<pre>
+【header.tpl】
+&lt;!DOCTYPE html&gt;
+&lt;html lang="ja"&gt;
+&lt;head&gt;
+&lt;meta charset="utf-8" /&gt;
+&lt;title&gt;SimpleTemplate「capture構文」&lt;/title&gt;
+{$header_insert}
+&lt;/head&gt;
+&lt;body&gt;
+</pre>
+<pre>
+【表示テンプレート】
+{* ヘッダー挿入部分設定 *}
+{capture name='header_insert'}
+&lt;script type="text/javascript"&gt;
+//&lt;![CDATA[
+function alertMsg(){
+  alert('テンプレート側でスクリプトが実装されました');
+}
+//]]&gt;
+&lt;/script>
+{/capture}
+
+{* ヘッダーテンプレートのインクルード *}
+{include file='header.tpl'}
+
+～template contents～
+
+{* フッターテンプレートのインクルード *}
+{include file='footer.tpl'}
+</pre>
+<pre>
+【footer.tpl】
+&lt;/body&gt;
+&lt;/html&gt;
+</pre>
+<!-- /テンプレートファイル内での変数の設定(capture) -->
+<!-- 1次元配列のループ処理（foreach構文） -->
+<h3>1次元配列のループ処理（foreach構文）</h3>
+<p>
+	SimpleTemplateにはテンプレートファイル内で1次元配列のループ処理をする構文（foreach構文）が用意されています。数値配列・連想配列ともに使用が可能です。<br>
+	まず、以下に使用例を記します。
+</p>
+<pre>
+【PHPファイル】
+// SimpleTemplateクラスのインクルード
+require_once　'SimpleTemplate.class.php';
+
+// SimpleTemplateインスタンスの生成
+$template = new SimpleTemplate();
+
+// テンプレート格納ディレクトリの設定
+$template->template_dir('./templates');
+// テンプレートファイル記述エンコーディングの指定
+$template->setTplEncoding('UTF-8');
+// 出力エンコーディングの指定
+$template->setOutputEncoding('UTF-8');
+
+$testAry = array('test01' => 'テストメッセージ01', 'test02' => 'テストメッセージ02', 'test03' => 'テストメッセージ03');
+
+// テンプレート変数の割り当て
+$template->assign('message', $testAry);
+
+// テンプレートファイルの表示（ディスプレイ）
+$template->display('sometemplate.tpl');
+</pre>
+<pre>
+【テンプレートファイル】sometemplate.tpl
+&lt;ul&gt;
+	{foreach from=$message key=k value=v}
+		&lt;li&gt;{$k}:{$v}&lt;/li&gt;
+	{/foreach}
+&lt;/ul&gt;
+</pre>
+<pre>
+【出力】
+・test01:テストメッセージ01
+・test02:テストメッセージ02
+・test03:テストメッセージ03
+</pre>
+<p>
+	上記例はインデックスキーの指定がある場合の例です。（※"key=k"と"{$k}"の部分です）<br>
+	foreach構文では①インデックスキーの指定がある場合と、②インデックスキーの指定がない場合の2つの構文が用意されています。
+</p>
+<p>
+	まず、①インデックスキーの指定がある場合ですが、構文は以下のようになります。
+</p>
+<pre>
+【構文】
+{foreach from=$templateArray key=k value=v}
+	*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+	           {$k}と{$v}を含むループ処理（繰り返し）文字列
+	*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+{/foreach}
+【記述例】
+{foreach from=$message key=k value=v}
+	&lt;li&gt;{$k}:{$v}&lt;/li&gt;
+{/foreach}
+</pre>
+<p>
+	foreach宣言の中で、from属性にロジックファイルで配列変数を割り当てたテンプレート変数を設定します。<br>
+	次に、key属性でループ処理（繰り返し）する文字列の中でキー（添え字[数値][文字列]）として使用する文字列を定義します。<br>
+	そして、value属性でループ処理（繰り返し）する文字列の中でキー（添え字[数値][文字列]）に対応する値として使用する文字列を定義します。<br>
+	ループ処理（繰り返し）をする文字列の中では、上記属性に定義した文字列に"{$"と"}"を前後に付けて使用します。
+</p>
+<p>
+	次に、②インデックスキーの指定がない場合の構文は以下のようになります。
+</p>
+<pre>
+【構文】
+{foreach from=$templateArray value=v}
+	*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+	             {$v}を含むループ処理（繰り返し）文字列
+	*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+{/foreach}
+【記述例】
+{foreach from=$message value=v}
+	&lt;li&gt;{$v}&lt;/li&gt;
+{/foreach}
+</pre>
+<p>
+	インデックスキーの指定がないforeach構文は数値配列のループ処理に使用すると便利です。
+</p>
+<!-- /1次元配列のループ処理（foreach構文） -->
+<!-- 2次元配列のループ処理（section構文） -->
+<h3>2次配列のループ処理（section構文）</h3>
+<p>
+	SimpleTemplateにはテンプレートファイル内で2次元配列のループ処理をする構文（section構文）が用意されています。<br>
+	まず、以下に使用例を記します。
+</p>
+<pre>
+【PHPファイル】
+// SimpleTemplateクラスのインクルード
+require_once　'SimpleTemplate.class.php';
+
+// SimpleTemplateインスタンスの生成
+$template = new SimpleTemplate();
+
+// テンプレート格納ディレクトリの設定
+$template->template_dir('./templates');
+// テンプレートファイル記述エンコーディングの指定
+$template->setTplEncoding('UTF-8');
+// 出力エンコーディングの指定
+$template->setOutputEncoding('UTF-8');
+
+$testAry = array(
+			 	array('foo' => 'foo01',
+					  'some' => 'some01',
+					  'any' => 'any01'),
+				array('foo' => 'foo02',
+					  'some' => 'some02',
+					  'any' => 'any02'),
+				array('foo' => 'foo03',
+					  'some' => 'some03',
+					  'any' => 'any03'),
+				array('foo' => 'foo04',
+					  'some' => 'some04',
+					  'any' => 'any04'),
+				array('foo' => 'foo05',
+					  'some' => 'some05',
+					  'any' => 'any05')
+			 );
+
+// テンプレート変数の割り当て
+$template->assign('message', $testAry);
+
+// テンプレートファイルの表示（ディスプレイ）
+$template->display('sometemplate.tpl');
+</pre>
+<pre>
+【テンプレートファイル】sometemplate.tpl
+&lt;table border="1"&gt;
+	{section loop=$message start=0 max=5}
+	&lt;tr&gt;
+		&lt;td>{$message.foo}&lt;/td&gt;&lt;td&gt;{$message.some}&lt;/td&gt;&lt;td&gt;{$message.any}&lt;/td&gt;
+	&lt;/tr&gt;
+	{/section}
+&lt;/table&gt;
+</pre>
+<pre>
+【出力】
+<table border="1">
+	<tr>
+		<td>foo01</td><td>some01</td><td>any01</td>
+	</tr>
+	<tr>
+		<td>foo02</td><td>some02</td><td>any02</td>
+	</tr>
+	<tr>
+		<td>foo03</td><td>some03</td><td>any03</td>
+	</tr>
+	<tr>
+		<td>foo04</td><td>some04</td><td>any04</td>
+	</tr>
+	<tr>
+		<td>foo05</td><td>some05</td><td>any05</td>
+	</tr>
+</table>
+</pre>
+<p>
+	上記例はstart属性とmax属性の指定がある場合の例です。<br>
+	section構文では①start属性・max属性の指定がある場合と、②start属性の指定がある場合、③max属性の指定がある場合、④start属性・max属性の指定が共にない場合の4つの構文が用意されています。
+</p>
+<p>
+	まず、①start属性・max属性の指定がある場合ですが、構文は以下のようになります。
+</p>
+<pre>
+【構文】
+{section loop=$templateArray start=[数値] max=[数値]}
+	*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+	               {$templateArray.[数値キー|連想キー]}を含むループ処理（繰り返し）文字列
+	*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+{/section}
+【記述例】
+{section loop=$message start=1 max=5}
+&lt;tr&gt;
+	&lt;td&gt;{$message.foo}&lt;/td&gt;&lt;td&gt;{$message.some}&lt;/td&gt;&lt;td&gt;{$message.any}&lt;/td&gt;
+&lt;/tr>
+{/section}
+</pre>
+<p>
+	section宣言の中で、loop属性にロジックファイルで配列変数を割り当てたテンプレート変数を設定します。<br>
+	次に、start属性でループ処理（繰り返し）するテンプレート変数の開始インデックスを指定します。start属性の指定は数値で行います。また、ループ処理（繰り返し）をする配列の1次元目の添え字をstart属性で指定しています。ですので、「0」を指定した場合、ループ処理（繰り返し）をする配列の先頭要素からループ処理（繰り返し）が始まります。<br>
+	そして、max属性でループ処理（繰り返し）する回数を数値で指定します。start属性で指定した値とmax属性で指定した値の合計がループ処理（繰り返し）をする配列の要素数を超えた場合は、配列の最後の要素までループ処理（繰り返し）が行われます。<br>
+	ループ処理（繰り返し）をする文字列の中では、loop属性に指定したテンプレート変数に"."を後ろに加えて、その後にループ処理をする配列のインデックスを加えた文字列に、"{"と"}"を前後に付けて使用します。
+</p>
+<p>
+	section構文を使用する際に注意しなければならないのは、ループ処理をする2次元配列の1次元目は数値配列でなければならないことです。<br>
+	現在、2次元配列の1次元目が連想配列である場合のループ処理に対応しておりません。
+</p>
+<p>
+	次に、②start属性の指定がある場合の構文は以下のようになります。
+</p>
+<pre>
+【構文】
+{section loop=$templateArray start=[数値]}
+	*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+	            {$templateArray.[数値キー|連想キー]}を含むループ処理（繰り返し）文字列
+	*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+{/section}
+【記述例】
+{section loop=$message start=1}
+&lt;tr&gt;
+	&lt;td&gt;{$message.foo}&lt;/td&gt;&lt;td&gt;{$message.some}&lt;/td&gt;&lt;td&gt;{$message.any}&lt;/td&gt;
+&lt;/tr>
+{/section}
+</pre>
+<p>
+	section構文にてstart属性のみをした場合は、start属性で指定した要素から2次元配列の最後の要素までループ処理が実行されます。
+</p>
+<p>
+	次に、③max属性の指定がある場合の構文は以下のようになります。
+</p>
+<pre>
+【構文】
+{section loop=$templateArray max=[数値]}
+	*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+	             {$templateArray.[数値キー|連想キー]}を含むループ処理（繰り返し）文字列
+	*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+{/section}
+【記述例】
+{section loop=$message max=10}
+&lt;tr&gt;
+	&lt;td&gt;{$message.foo}&lt;/td&gt;&lt;td&gt;{$message.some}&lt;/td&gt;&lt;td&gt;{$message.any}&lt;/td&gt;
+&lt;/tr>
+{/section}
+</pre>
+<p>
+	section構文にてmax属性のみをした場合は、2次元配列の先頭要素からmax属性に指定した回数だけループ処理が行われます。<br>
+	例えばmax属性に「10」を指定した場合、2次元配列の要素[0]から[9]（要素数10）までループ処理が行われます。
+</p>
+<p>
+	最後に、④start属性・max属性の指定が共にない場合の構文は以下のようになります。
+</p>
+<pre>
+【構文】
+{section loop=$templateArray}
+	*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+	            {$templateArray.[数値キー|連想キー]}を含むループ処理（繰り返し）文字列
+	*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+{/section}
+【記述例】
+{section loop=$message}
+&lt;tr&gt;
+	&lt;td&gt;{$message.foo}&lt;/td&gt;&lt;td&gt;{$message.some}&lt;/td&gt;&lt;td&gt;{$message.any}&lt;/td&gt;
+&lt;/tr>
+{/section}
+</pre>
+<p>
+	section構文にてstart属性・max属性の指定が共にない場合は、2次元配列の先頭要素[0]から最後の要素までループ処理が行われます。
+</p>
+<p>
+	section構文をSimpleTemplateに実装した理由ですが、WEBアプリケーションにおける一覧ページ作成の利便性を高めるためです。<br>
+	例えば、データベースを使用したWEBアプリケーションでデータの一覧ページを作成する場合に、データベースから目的のデータを抽出して、データベースからの結果セットを配列に変換した上でsection構文を用いると簡単に一覧ページを作成出来ます。<br>
+	データベースを使用せずにデータをファイルとして保存している場合でも、データを2次元配列に変換してテンプレート変数として割り当てると、同様に一覧ページを簡単に作成出来ます。<br>
+	例を示すと以下のような処理をPHPロジックファイルで行います。
+</p>
+<pre>
+$sql = &lt;&lt;&lt;EOT
+SELECT id,name,desc,status FROM sometable
+WHERE status=1
+ORDER BY id DESC
+EOT;
+
+$result = mysql_query($sql)
+
+if (!$result) {
+	die("データベースへの問い合わせに失敗しました。");
+}
+
+while ($row = mysql_fetch_assoc($result)) {
+	$dataArray[] = $row;
+}
+*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+　　         中間処理
+*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+//テンプレート変数の割り当て
+$template->assign('userData', $dataArray);
+</pre>
+<!-- /2次元配列のループ処理（section構文） -->
+<!-- ifステートメント -->
+<h3>ifステートメント構文（条件分岐処理）</h3>
+<p>
+	SimpleTemplateには、「ifステートメント構文（条件分岐処理）」が用意されています。<br>
+	まず、使用例は下記のようになります。
+</p>
+<pre>
+【PHPファイル】
+// SimpleTemplateクラスのインクルード
+require_once('SimpleTemplate.class.php');
+
+// SimpleTemplateインスタンスの生成
+$template = new SimpleTemplate();
+
+// テンプレート格納ディレクトリの設定
+$template-&gt;template_dir('./templates');
+// テンプレートファイル記述エンコーディングの指定
+$template-&gt;setTplEncoding('UTF-8');
+// 出力エンコーディングの指定
+$template-&gt;setOutputEncoding('UTF-8');
+
+$name = 'Fred';
+
+// テンプレート変数の割り当て
+$template-&gt;assign('name', $name);
+
+// テンプレートファイルの表示（ディスプレイ）
+$template-&gt;display('sometemplate.tpl');
+</pre>
+<pre>
+【テンプレートファイル】sometemplate.tpl
+{if $name == 'Fred'}
+	名前はフレッドです。
+{elseif}
+	名前はフレッドではありません。
+{/if}
+</pre>
+<pre>
+【出力】
+名前はフレッドです。
+</pre>
+<p>
+	上記例のように、PHPファイルで変数を割り当てたテンプレート変数を使用して、「{if [式]}式が真の場合の値(リテラル){elseif}式が偽の場合の値（リテラル）{/if}」をテンプレートファイルに記述します。<br>
+	[式]がPHPスクリプトとして実行され、評価されます。従って、[式]の評価（true,false）はPHPの言語文法に従います。例えば、0以外の数値であれば「true」と評価されますし、空文字（''）の文字列は「false」として評価されます。※詳しくは公式ドキュメントをご参照ください。<a href="http://www.php.net/manual/ja/language.types.boolean.php" target="blank">&gt;&gt;PHPドキュメント</a>
+</p>
+<p>
+	ifステートメント構文には、①{if [式]}{elseif}{/if}と、②{if [式]}{/if}の2種類があります。
+</p>
+<p>
+	①{if [式]}{elseif}{/if}の構文は以下のようになります。
+</p>
+<pre>
+【構文】
+{if [式]}式が真の場合の値(リテラル){elseif}式が偽の場合の値（リテラル）{/if}
+【記述例】
+{if $number == 1}
+	変数numberは真です
+{elseif}
+	変数numberは偽です
+{/if}
+</pre>
+<p>
+	内部的な処理として、[式]の評価が真の場合は、ifステートメント文全体が「式が真の場合の値」に置き換わり、[式]の評価が偽の場合は、ifステートメント文全体が「式が偽の場合の値」に置き換わります。
+</p>
+<p>
+	②{if [式]}{/if}の構文は以下のようになります。
+</p>
+<pre>
+【構文】
+{if [式]}式が真の場合の値(リテラル){/if}
+【記述例】
+{if $string == 'Show'}
+	このブロックは表示されます
+{/if}
+</pre>
+<p>
+	内部的な処理として、[式]の評価が真の場合は、ifステートメント文全体が「式が真の場合の値」に置き換わり、[式]の評価が偽の場合は、ifステートメント文全体が空文字に置き換わります。
+</p>
+<p>
+	ifステートメント構文の具体的な活用例ですが、PHPロジックファイル内での値によって、表示・非表示を切り替えたい場合などに使用できます。例えば、ログイン認証処理を終えたユーザに対してはAを表示し、非ログインユーザにはBを表示する場合などです。
+</p>
+<!-- /ifステートメント -->
+<!-- ループ構文（foreach構文・section構文）内でのif構文処理 -->
+<h3>ループ構文（foreach構文・section構文）内でのif構文処理</h3>
+<p>
+	SimpleTemplateでは、①foreach構文・②section構文のループ構文内で、配列変数を使用して「if構文処理」を行うことが出来ます。
+	まず、①foreach構文から具体例を見てみましょう。
+</p>
+<pre>
+【PHPファイル】
+$arrMessage = array(
+      'test01' => 'テストメッセージ01',
+      'test02' => 'テストメッセージ02',
+      'test03' => 'テストメッセージ03');
+
+// テンプレート変数の割り当て
+$template->assign('arrMessage', $arrMessage);
+</pre>
+<pre>
+【テンプレートファイル】
+&lt;ul&gt;
+{foreach from=$arrMessage key=k value=v}
+  &lt;li {if $v == 'テストメッセージ02'}style="font-style:italic"{elseif}
+  style="text-decoration:underline"{/if}&gt;{$k}:{$v}&lt;/li&gt;
+{/foreach}
+&lt;/ul&gt;
+</pre>
+<pre>
+【出力結果】
+<ul>
+　　<li style="text-decoration:underline">test01:テストメッセージ01</li>
+　　<li style="font-style:italic">test02:テストメッセージ02</li>
+　　<li style="text-decoration:underline">test03:テストメッセージ03</li>
+</ul>
+</pre>
+<p>
+	上記例のように、foreach構文内で配列変数（例では、$v）を使用してif判定を行うことができます。<br>
+	ifステートメント構文（条件分岐処理）でご説明したように、if内の[式]はPHPスクリプトとして実行され、評価されます。
+	※詳しくは公式ドキュメントをご参照ください。<a href="http://www.php.net/manual/ja/language.types.boolean.php" target="blank">&gt;&gt;PHPドキュメント</a><br>
+	例では、ループ配列のバリュー（$value）を使用しておりますが、キー（$key）を使用して「{if $k == 'test02'}」とすることも可能です。<br>
+	また、例では①{if [式]}{elseif}{/if}を使用しておりますが、②{if [式]}{/if}を使用することも可能です。
+</p>
+<p>
+	次に、②section構文内のでif構文処理の具体例を見て行きましょう。
+</p>
+<pre>
+【PHPファイル】
+$arrVariable = array(
+      array('foo' => 'foo01',
+            'some' => 'some01',
+            'any' => 'any01'),
+      array('foo' => 'foo02',
+            'some' => 'some02',
+            'any' => 'any02'),
+      array('foo' => 'foo03',
+            'some' => 'some03',
+            'any' => 'any03'),
+      array('foo' => 'foo04',
+            'some' => 'some04',
+            'any' => 'any04'),
+      array('foo' => 'foo05',
+            'some' => 'some05',
+            'any' => 'any05')
+      );
+
+// テンプレート変数の割り当て
+$template->assign('arrVariable', $arrVariable);
+</pre>
+<pre>
+【テンプレートファイル】
+&lt;ul&gt;
+{section loop=$arrVariable}
+　　&lt;li {if $arrVariable.foo == 'foo03'}style="font-weight:bold"{/if}&gt;
+　　{$arrVariable.foo}：{$arrVariable.some}：{$arrVariable.any}&lt;/li&gt;
+{/section}
+&lt;/ul&gt;
+</pre>
+<pre>
+【出力結果】
+<ul>
+	<li >foo01：some01：any01</li>
+	<li >foo02：some02：any02</li>
+	<li style="font-weight:bold">foo03：some03：any03</li>
+	<li >foo04：some04：any04</li>
+	<li >foo05：some05：any05</li>
+</ul>
+</pre>
+<p>
+	上記例のように、section構文内で配列変数（例では、$arrVariable.foo）を使用してif判定を行うことができます。<br>
+	例では②{if [式]}{/if}を使用しておりますが、①{if [式]}{elseif}{/if}を使用することも可能です。
+</p>
+<p>
+	①foreach構文・②section構文のループ構文内でのif構文処理ですが、例でも示したように配列変数の値を判定してスタイルを適用する場合に便利です。
+</p>
+<!-- /ループ構文（foreach構文・section構文）内でのif構文処理 -->
+<!-- スマートフォン対応について -->
+<h3>スマートフォン対応について</h3>
+<p>
+	SimpleTemplateを使用すると、PC・スマートフォン両対応のWEBシステムを構築することが出来ます。<br>
+	具体的に、クライアント端末のユーザエージェント情報に従って、PCとスマートフォンで表示するテンプレートを振り分ける処理を考えてみます。
+</p>
+<pre>
+【PHPファイル】
+// SimpleTemplateクラスのインクルード
+require_once('SimpleTemplate.class.php');
+
+// SimpleTemplateインスタンスの生成
+$template = new SimpleTemplate();
+
+// PCとスマートフォン端末との振り分け処理
+// スマートフォン端末用フラグの初期化（true='smartphone'/false='PC'）
+$agent = $_SERVER['HTTP_USER_AGENT'];
+if (strpos($agent, 'iPhone') !== false &amp;&amp; strpos($agent, 'iPad') === false) {
+	$isSmartphone = true;
+} elseif (strpos($agent, 'iPod') !== false) {
+	$isSmartphone = true;
+} elseif (strpos($agent, 'Android') !== false) {
+	$isSmartphone = true;
+} else {
+	$isSmartphone = false; // PC
+}
+
+// テンプレート格納ディレクトリの設定
+if ($isSmartphone) { 　　　// スマートフォン端末の場合のテンプレート格納ディレクトリ
+	$template-&gt;template_dir('./templates/smartphone');
+} else { 　　　　　　　　// PCの場合のテンプレート格納ディレクトリ
+	$template-&gt;template_dir('./templates');
+}
+
+// テンプレートファイル記述エンコーディングの指定
+$template->setTplEncoding('UTF-8');
+
+// 出力エンコーディングの指定
+$template-&gt;setOutputEncoding('UTF-8'); // PC・スマートフォン共にUTF-8で出力
+</pre>
+<p>
+	上記例では、PC・スマートフォン共に①テンプレートファイル記述エンコーディング、及び、②出力エンコーディングをUTF-8に設定して、表示するテンプレートファイルのみをPCとスマートフォンで切り替える処理となります。<br>
+	スマートフォンでは、スマートフォン画面用に設計したHTMLファイルを使用する必要があるため、例のようにスマートフォン端末からのアクセスの場合に、スマートフォン専用のテンプレートファイルを出力処理を実装するとPC・スマートフォン両対応のWEBシステムを構築することが出来ます。<br>
+	また、上記例では出力するテンプレートファイルのみを切り替える処理のため、PHP側のロジックをPC・スマートフォンで共用することになります。PCとスマートフォンで画面が1対1に対応する場合などは、コードの効率化・省力化にもなると思われます。<br>
+	※PCとスマートフォンで画面が1対1に対応しない場合は、スマートフォン専用画面のPHPロジックファイルを用意した上で、displayするテンプレートファイルをスマートフォン専用のファイルに設定する必要があります。
+</p>
+<!-- /スマートフォン対応について -->
+<!-- 携帯対応について -->
+<h3>携帯対応について</h3>
+<p>
+	SimpleTemplateでは、PC・携帯両対応のWEBシステム構築のために、①setTplEncodingメソッドと②setOutputEncodingメソッドを用意しています。<br>
+	具体的に、クライアント端末のユーザエージェント情報に従って、PCと携帯で表示するテンプレートを振り分ける処理を考えてみます。
+</p>
+<pre>
+【PHPファイル】
+// SimpleTemplateクラスのインクルード
+require_once('SimpleTemplate.class.php');
+
+// SimpleTemplateインスタンスの生成
+$template = new SimpleTemplate();
+
+// PCと携帯端末との振り分け処理
+// 携帯端末用フラグの初期化（0='PC'/1='mobile'）
+if (strpos($_SERVER['HTTP_USER_AGENT'], 'DoCoMo') !== false) {
+	$mobile_flag = 1;
+} elseif (strpos($_SERVER['HTTP_USER_AGENT'], 'SoftBank') !== false) {
+	$mobile_flag = 1;
+} elseif (strpos($_SERVER['HTTP_USER_AGENT'], 'KDDI') !== false) {
+	$mobile_flag = 1;
+} elseif (strpos($_SERVER['HTTP_USER_AGENT'], 'WILLCOM') !== false) {
+	$mobile_flag = 1;
+} else {
+	$mobile_flag = 0; // PC
+}
+
+// テンプレート格納ディレクトリの設定
+if ($mobile_flag) { 　　　// 携帯端末の場合のテンプレート格納ディレクトリ
+	$template-&gt;template_dir('./templates/mobile');
+} else { 　　　　　　　　// PCの場合のテンプレート格納ディレクトリ
+	$template-&gt;template_dir('./templates');
+}
+
+// テンプレートファイル記述エンコーディングの指定
+$template->setTplEncoding('UTF-8');
+
+// 出力エンコーディングの指定
+if ($mobile_flag) {　　　// 携帯端末の場合にはShift_JISで出力
+	$template-&gt;setOutputEncoding('SJIS');
+} else { 　　　　　　　// PCの場合にはUTF-8で出力
+	$template-&gt;setOutputEncoding('UTF-8');
+}
+</pre>
+<p>
+	上記例に従うと、SimpleTemplateクラスをインクルードして、インスタンスを生成します。<br>
+	それから、例では$mobile_flagという変数を使用して、クライアント端末がPCか携帯かを変数として保持します。<br>
+	次に、$mobile_flagの値に従って（0='PC'/1='mobile'）、①テンプレート格納ディレクトリと②出力エンコーディングを設定しています。<br>
+	クライアント端末がPCの場合には、「./templates」をテンプレート格納ディレクトリとし、出力エンコーディングを「UTF-8」とします。<br>
+	携帯端末の場合には、「./templates/mobile」をテンプレート格納ディレクトリとし、出力エンコーディングを「SJIS」とします。<br>
+	※携帯サイトではキャラクターセットはShift_JISとする場合が一般的です。また、主要3キャリアの端末がShift_JISに対応しています。<br>
+	※上記例では、PC・携帯共にテンプレートファイルはUTF-8で記述した場合を想定しています。
+</p>
+<p>
+	上記例のような実装を行えば、PCと携帯で異なるテンプレートを異なるエンコーディング（キャラクターセット）で出力することが出来ます。
+</p>
+<!-- /携帯対応について -->
+<!-- /リファレンス -->
+<!-- クラスメンバ -->
+<h2>クラスメンバ</h2>
+<!-- プロパティー（メンバ変数） -->
+<h3>プロパティー（メンバ変数）</h3>
+<h4>テンプレートディレクトリ（$_template_dir）※プライベートメンバ</h4>
+<p>
+	$_template_dirはテンプレートを格納しているディレクトリ（string型）を保持します。<br>
+	template_dirメソッドでテンプレート格納ディレクトリを指定しない場合、カレントディレクトリ（.）がテンプレート格納ディレクトリとなります。（コンストラクタでの初期値です）
+</p>
+<h4>キャッシュディレクトリ（$_cache_dir）※プライベートメンバ</h4>
+<p>
+	$_cache_dirはキャッシュファイルを格納しているディレクトリ（string型）を保持します。<br>
+	cache_dirメソッドでテンプレート格納ディレクトリを指定しない場合、カレントディレクトリ（.）がテンプレート格納ディレクトリとなります。（コンストラクタでの初期値です）
+</p>
+<h4>キャッシュ機構使用フラグ（$_use_cache）※プライベートメンバ</h4>
+<p>
+	$_use_cacheはキャッシュ機構を使用するかのフラグとして保持されます。<br>
+	useCacheSystemメソッドでtrueを設定するとキャッシュ機構が有効(true)となります。デフォルトでは無効(false)です。（コンストラクタでの初期値です）
+</p>
+<h4>変数割り当て配列（$_array_variable）※プライベートメンバ</h4>
+<p>
+	$_array_variableはassignメソッドにて割り当てられた変数を保持します。(array型)<br>
+	$_array_variableはコンストラクタで空の配列として初期化されます。
+</p>
+<h4>テンプレート記述エンコーディング（$_tplEncoding）※プライベートメンバ</h4>
+<p>
+	$_tplEncodingはテンプレート記述エンコーディング（string型）を保持します。<br>
+	setTplEncodingメソッドでテンプレート記述エンコーディングを指定しない場合、$_tplEncodingはUTF-8となります。（コンストラクタでの初期値です）
+</p>
+<h4>出力エンコーディング（$_outputEncoding）※プライベートメンバ</h4>
+<p>
+	$_outputEncodingは出力エンコーディング（string型）を保持します。<br>
+	setOutputEncodingメソッドで出力エンコーディングを指定しない場合、$_outputEncodingはUTF-8となります。（コンストラクタでの初期値です）
+</p>
+<!-- /プロパティー（メンバ変数） -->
+<!-- メソッド（メンバ関数） -->
+<h3>メソッド（メンバ関数）</h3>
+<h4>テンプレートディレクトリ設定メソッド（template_dir）</h4>
+<p>
+	template_dirメソッドにてテンプレートファイルを格納するディレクトリを指定します。<br>
+	template_dirメソッドでテンプレート格納ディレクトリを指定しない場合、カレントディレクトリ（.）がテンプレート格納ディレクトリとなります。（コンストラクタでの初期値です）<br>
+	パラメータとして、ディレクトリパス（絶対パス・相対パス両方の指定が可能です）を渡します。<br>
+	戻り値として、テンプレートディレクトリが存在し、テンプレートディレクトリプロパティ―への設定が完了した場合はtrueを、テンプレートディレクトリが存在しない場合はfalseを返します。
+</p>
+<h4>キャッシュディレクトリ設定メソッド（cache_dir）</h4>
+<p>
+	cache_dirメソッドにてキャッシュファイルを格納するディレクトリを指定します。<br>
+	cache_dirメソッドでキャッシュ格納ディレクトリを指定しない場合、カレントディレクトリ（.）がテンプレート格納ディレクトリとなります。（コンストラクタでの初期値です）<br>
+	パラメータとして、ディレクトリパス（絶対パス・相対パス両方の指定が可能です）を渡します。<br>
+	戻り値として、キャッシュディレクトリが存在し、キャッシュディレクトリプロパティ―への設定が完了した場合はtrueを、キャッシュディレクトリが存在しない場合はfalseを返します。
+</p>
+<h4>キャッシュ機構使用設定メソッド（useCacheSystem）</h4>
+<p>
+	useCacheSystemメソッドにてキャッシュ機構使用の有効化・無効化が出来ます。<br>
+	useCacheSystemメソッドでtrueを設定するとキャッシュ機構が有効(true)となります。デフォルトでは無効(false)です。（コンストラクタでの初期値です）
+	キャッシュ機構の有効化が成功した場合はtrueを、キャッシュ機構の有効化に失敗した場合、または、無効化に成功した場合はfalseを返します。
+</p>
+<h4>テンプレート記述エンコーディング指定メソッド（setTplEncoding）</h4>
+<p>
+	setTplEncodingメソッドにてテンプレートファイルの記述エンコーディングを指定します。<a href="http://www.php.net/manual/ja/mbstring.encodings.php" target="_blank">&gt;&gt;サポートされるエンコーディング</a><br>
+	setTplEncodingメソッドでテンプレート記述エンコーディングを指定しない場合、$_tplEncordingはUTF-8となります。（コンストラクタでの初期値です）<br>
+	PHPにてサポートされていないエンコーディングを指定した場合(mb_string拡張にてサポートされていないエンコーディングを指定した場合)、テンプレート記述エンコーディングの指定は失敗し、falseを返します。指定が成功した場合にはtrueを返します。
+</p>
+<h4>出力エンコーディング設定メソッド（setOutputEncoding）</h4>
+<p>
+	setOutputEncodingメソッドにて出力エンコーディングを指定します。<a href="http://www.php.net/manual/ja/mbstring.encodings.php" target="_blank">&gt;&gt;サポートされるエンコーディング</a><br>
+	setOutputEncodingメソッドで出力エンコーディングを指定しない場合、$_outputEncordingはUTF-8となります。（コンストラクタでの初期値です）<br>
+	PHPにてサポートされていないエンコーディングを指定した場合(mb_string拡張にてサポートされていないエンコーディングを指定した場合)、出力エンコーディングの指定は失敗し、falseを返します。指定が成功した場合にはtrueを返します。
+</p>
+<h4>変数割り当てメソッド（assign）</h4>
+<p>
+	assignメソッドにてテンプレート変数を$_array_variableに割り当てます。<br>
+	SimpleTemplateの基本的な機能として、assignメソッドで割り当てたテンプレート変数が展開されて出力されます。<br>
+	テンプレート変数識別子には文字列（string）しか使用出来ません。文字列型以外の識別子（例：数値）を使用した場合には、変数の割り当て（アサイン）は失敗し、assignメソッドはfalseを返します。割り当て（アサイン）に成功した場合は、trueを返します。<br>
+	※但し、オブジェクト型・リソース型の変数を割り当てた場合、割り当て自体は成功しますが、表示（display）する際に、空文字へ変換されて出力には現れません。
+</p>
+<h4>テンプレート表示メソッド（display）</h4>
+<p>
+	SimpleTemplateに実装されている各種処理を行った上で、出力をするメソッドです。<br>
+	パラメータとして、表示するテンプレートファイルを渡します。※表示テンプレートファイルはテンプレート格納ディレクトリに存在する必要があります。
+</p>
+<!-- /メソッド（メンバ関数） -->
+<!-- コンストラクタ・デストラクタ -->
+<h3>コンストラクタ・デストラクタ</h3>
+<h4>コンストラクタ</h4>
+<pre>
+function __construct()
+	{
+		$this->_template_dir　= '.'; // デフォルトテンプレートディレクトリ
+		$this->_cache_dir = '.'; // デフォルトキャッシュディレクトリ
+		$this->_use_cache = false;   // デフォルトキャッシュ機構使用フラグ
+		$this->_array_variable = array(); // デフォルト変数割り当て配列
+		$this->_outputEncoding = 'UTF-8'; // デフォルト出力エンコーディング
+		$this->_tplEncoding　= 'UTF-8'; // デフォルトテンプレート記述エンコーディング
+	}
+</pre>
+<h4>デストラクタ</h4>
+<pre>
+function __destruct(){}
+</pre>
+<!-- /コンストラクタ・デストラクタ -->
+<!-- /クラスメンバ -->
+</div>
+</body>
+</html>
