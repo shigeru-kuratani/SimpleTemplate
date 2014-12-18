@@ -6,10 +6,10 @@
 *
 * @class		SimpleTemplate
 * @author		Shigeru Kuratani <kuratani@benefiss.com>
-* @copyright	2012, Shigeru Kuratani <Kuratani@benefiss.com>
+* @copyright	2014, Shigeru Kuratani <Kuratani@benefiss.com>
 * @license		The BSD License
-* @version		1.1.0
-* @link			http://st.benefiss.com
+* @version		1.1.1
+* @link		http://st.benefiss.com
 * @since		File available since Release 1.0.8
 * @disclaimer	THIS SOFTWARE IS PROVIDED BY THE FREEBSD PROJECT ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES,INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE FREEBSD PROJECT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *				【邦訳】
@@ -37,7 +37,7 @@ class SimpleTemplate
 	// インデックスキーの指定がある場合
 	const PATTERN_FOREACH = '/{foreach from=\$([\w.-_?&=]+) key=([\w.-_?&=]+) value=([\w.-_?=]+)}([\s\S]*){\/foreach}/U';
 	// インデックスキーの指定がない場合
-	const PATTERN_FOREACH_NO_INDEX = '/{foreach from=\$([\w.-_?&=]+) value=([\w.-_?&=]+)}([\s\S]*){\/foreach}/U';
+	const PATTERN_FOREACH_ONLY_VALUE = '/{foreach from=\$([\w.-_?&=]+) value=([\w.-_?&=]+)}([\s\S]*){\/foreach}/U';
 	
 	// section構文の処理
 	// start（配列ループ開始インデックス）指定・max（配列ループ数）指定がある場合
@@ -349,6 +349,7 @@ class SimpleTemplate
 				$loop_array = $this->_array_variable[$matches[1][$i]];
 				$loop_string = $matches[4][$i];
 				$translate_string = ''; // 変換文字列の初期化
+				$index = 0; // インデックス初期化
 				foreach($loop_array as $key => $value) {
 					// if構文の処理
 					$tmp_string = $this->_processIfStatementInLoop($matches[2][$i], $key, $loop_string);
@@ -356,6 +357,8 @@ class SimpleTemplate
 
 					$tmp_string = str_replace('{$' . $matches[2][$i] . '}', $key, $tmp_string);
 					$tmp_string = str_replace('{$' . $matches[3][$i] . '}', $value, $tmp_string);
+					$tmp_string = str_replace('{' . $matches[1][$i] . '.index}', $index++, $tmp_string);
+					
 					$translate_string .= $tmp_string;
 				}
 				$template_string = str_replace($matches[0][$i], $translate_string, $template_string);
@@ -363,21 +366,25 @@ class SimpleTemplate
 		}
 		
 		// インデックスキーの指定がない場合
-		if($match_count = preg_match_all(self::PATTERN_FOREACH_NO_INDEX, $template_string, $matches, PREG_PATTERN_ORDER)) {
+		if($match_count = preg_match_all(self::PATTERN_FOREACH_ONLY_VALUE, $template_string, $matches, PREG_PATTERN_ORDER)) {
 			for($i =0; $i < $match_count; $i++) {
 				$loop_array = $this->_array_variable[$matches[1][$i]];
 				$loop_string = $matches[3][$i];
 				$translate_string = ''; // 変換文字列の初期化
+				$index = 0; // インデックス初期化
 				foreach($loop_array as $value) {
 					// if構文の処理
 					$tmp_string = $this->_processIfStatementInLoop($matches[2][$i], $value, $loop_string);
 					
 					$tmp_string = str_replace('{$' . $matches[2][$i] . '}', $value, $tmp_string);
+					$tmp_string = str_replace('{' . $matches[1][$i] . '.index}', $index++, $tmp_string);
+					
 					$translate_string .= $tmp_string;
 				}
 				$template_string = str_replace($matches[0][$i], $translate_string, $template_string);
 			}
 		}
+		
 		return $template_string;
 	}
 	
@@ -393,7 +400,7 @@ class SimpleTemplate
 	{
 		// start（配列ループ開始インデックス）指定・max（配列ループ数）指定がある場合
 		if($match_count = preg_match_all(self::PATTERN_SECTION, $template_string, $matches, PREG_PATTERN_ORDER)) {
-			for($i =0; $i < $match_count; $i++) {
+			for($i = 0; $i < $match_count; $i++) {
 				$loop_array = $this->_array_variable[$matches[1][$i]];
 				$loop_string = $matches[4][$i];
 				$start = $matches[2][$i];
@@ -406,14 +413,17 @@ class SimpleTemplate
 				}else{
 					$max_count = $array_count;
 				}
-				for($j = $start; $j < $max_count; $j++) {
+				$index = 0; // インデックス初期化
+				for($j = $start, $index = 0; $j < $max_count; $j++) {
 					$tmp_string = $loop_string; // 仮文字列変数の初期化
 					foreach($loop_array[$j] as $key => $value) {
 						// if構文の処理
 						$tmp_string = $this->_processIfStatementInLoop($matches[1][$i] . '.' . $key, $value, $tmp_string);
 						
 						$tmp_string = str_replace('{$' . $matches[1][$i] . '.' . $key . '}', $value, $tmp_string);
+						$tmp_string = str_replace('{' . $matches[1][$i] . '.index}', $index, $tmp_string);
 					}
+					$index++; // インデックスをインクリメント
 					$translate_string .= $tmp_string;
 				}
 				$template_string = str_replace($matches[0][$i], $translate_string, $template_string);
@@ -428,6 +438,7 @@ class SimpleTemplate
 				$start = $matches[2][$i];
 				$translate_string = ''; // 変換文字列の初期化
 				$array_count = count($loop_array); // ループ配列のインデックス数
+				$index = 0; // インデックス初期化
 				for($j = $start; $j < $array_count; $j++) {
 					$tmp_string = $loop_string; // 仮文字列変数の初期化
 					foreach($loop_array[$j] as $key => $value) {
@@ -435,7 +446,9 @@ class SimpleTemplate
 						$tmp_string = $this->_processIfStatementInLoop($matches[1][$i] . '.' . $key, $value, $tmp_string);
 						
 						$tmp_string = str_replace('{$' . $matches[1][$i] . '.' . $key . '}', $value, $tmp_string);
+						$tmp_string = str_replace('{' . $matches[1][$i] . '.index}', $index, $tmp_string);
 					}
+					$index++; // インデックスをインクリメント
 					$translate_string .= $tmp_string;
 				}
 				$template_string = str_replace($matches[0][$i], $translate_string, $template_string);
@@ -450,6 +463,7 @@ class SimpleTemplate
 				$max = $matches[2][$i];
 				$translate_string = ''; // 変換文字列の初期化
 				$array_count = count($loop_array); // ループ配列のインデックス数
+				$index = 0; // インデックス初期化
 				// $max_countの調整
 				if($array_count > $max) {
 					$max_count = $max;
@@ -463,7 +477,9 @@ class SimpleTemplate
 						$tmp_string = $this->_processIfStatementInLoop($matches[1][$i] . '.' . $key, $value, $tmp_string);
 						
 						$tmp_string = str_replace('{$' . $matches[1][$i] . '.' . $key . '}', $value, $tmp_string);
+						$tmp_string = str_replace('{' . $matches[1][$i] . '.index}', $index, $tmp_string);
 					}
+					$index++; // インデックスをインクリメント
 					$translate_string .= $tmp_string;
 				}
 				$template_string = str_replace($matches[0][$i], $translate_string, $template_string);
@@ -477,6 +493,7 @@ class SimpleTemplate
 				$loop_string = $matches[2][$i];
 				$translate_string = ''; // 変換文字列の初期化
 				$array_count = count($loop_array); // ループ配列のインデックス数
+				$index = 0; // インデックス初期化
 				for($j =0; $j < $array_count; $j++) {
 					$tmp_string = $loop_string; // 仮文字列変数の初期化
 					foreach($loop_array[$j] as $key => $value) {
@@ -484,7 +501,9 @@ class SimpleTemplate
 						$tmp_string = $this->_processIfStatementInLoop($matches[1][$i] . '.' . $key, $value, $tmp_string);
 						
 						$tmp_string = str_replace('{$' . $matches[1][$i] . '.' . $key . '}', $value, $tmp_string);
+						$tmp_string = str_replace('{' . $matches[1][$i] . '.index}', $index, $tmp_string);
 					}
+					$index++; // インデックスをインクリメント
 					$translate_string .= $tmp_string;
 				}
 				$template_string = str_replace($matches[0][$i], $translate_string, $template_string);
