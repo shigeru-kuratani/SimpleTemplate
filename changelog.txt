@@ -92,3 +92,7 @@ function setCacheDir($path)
 function display()
 </ver 1.1.0>
 
+<ver 1.1.1>
+1.ループ構文(foreach/section)内で、要素インデックス(index)を参照出来るように改修(Dec 18, 2014)
+</ver 1.1.1>
+
