@@ -16,6 +16,7 @@ SimpleTemplateはPHPで記述された「シンプル」で「軽量」なテン
 
 - [SimpleTemplateについて](./doc/SimpleTemplateについて.md)
 - [クイックスタート](./doc/クイックスタート.md)
+- [リファレンス](./doc/リファレンス.md)
 
 ## ライセンス
 
